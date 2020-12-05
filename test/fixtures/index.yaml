@@ -1,0 +1,31 @@
+openapi: 3.0.3
+info:
+    title: My Service
+    version: 0.0.0
+
+tags:
+- name: foo
+  description: lorem ipsum dolor sit amet
+- name: bar
+
+components:
+    schemas:
+        article:
+            type: object
+            properties:
+                title:
+                    type: string
+                date:
+                    type: string
+                    format: date
+
+paths:
+    /:
+        get:
+            summary: front page
+            responses:
+                200:
+                    content:
+                        text/html:
+                            schema:
+                                type: string

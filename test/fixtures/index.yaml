@@ -3,21 +3,10 @@ info:
     title: My Service
     version: 0.0.0
 
-tags:
-- name: foo
-  description: lorem ipsum dolor sit amet
-- name: bar
+tags: "@tags.yaml"
 
 components:
-    schemas:
-        article:
-            type: object
-            properties:
-                title:
-                    type: string
-                date:
-                    type: string
-                    format: date
+    schemas: "@schemas.yaml"
 
 paths:
     /:

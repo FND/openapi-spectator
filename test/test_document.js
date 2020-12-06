@@ -20,10 +20,21 @@ test("document", async () => {
 	assertDeep(Object.keys(paths), [
 		"/",
 		"/admin",
-		"/blog"
+		"/blog",
+		"/blog/{slug}"
 	]);
 	assertSame(paths["/"].get.summary, "front page");
 	assertSame(paths["/admin"].get.summary, "administration interface");
 	assertSame(paths["/blog"].get.summary, "list blog posts");
 	assertSame(paths["/blog"].post.summary, "create blog post");
+	assertSame(paths["/blog/{slug}"].get.summary, "show blog post");
+	assertDeep(paths["/blog/{slug}"].get.parameters, [{
+		name: "slug",
+		description: "article identifier",
+		in: "path",
+		required: true,
+		schema: {
+			type: "string"
+		}
+	}]);
 });

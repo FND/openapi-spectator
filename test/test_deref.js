@@ -49,12 +49,14 @@ test("directory dereferencing", async () => {
 	assertDeep(Object.keys(res.paths), [
 		"/",
 		"/admin",
-		"/blog"
+		"/blog",
+		"/blog/{slug}"
 	]);
 	assertSame(res.paths["/"].GET.summary, "front page");
 	assertSame(res.paths["/admin"].GET.summary, "administration interface");
 	assertSame(res.paths["/blog"].GET.summary, "list blog posts");
 	assertSame(res.paths["/blog"].POST.summary, "create blog post");
+	assertSame(res.paths["/blog/{slug}"].GET.summary, "show blog post");
 });
 
 test("nested dereferencing", async () => {

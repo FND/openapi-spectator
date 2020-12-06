@@ -1,0 +1,9 @@
+uri: /blog/{slug}
+pathParameters:
+    slug:
+        description: article identifier
+        schema:
+            type: string
+
+GET:
+    summary: show blog post

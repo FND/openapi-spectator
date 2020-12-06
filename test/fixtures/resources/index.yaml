@@ -1,0 +1,9 @@
+uri: /
+GET:
+    summary: front page
+    responses:
+        200:
+            content:
+                text/html:
+                    schema:
+                        type: string

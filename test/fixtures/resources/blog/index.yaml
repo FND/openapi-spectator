@@ -1,0 +1,5 @@
+uri: /blog
+GET:
+    summary: list blog posts
+POST:
+    summary: create blog post

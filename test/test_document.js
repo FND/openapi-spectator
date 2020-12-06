@@ -17,5 +17,13 @@ test("document", async () => {
 		{ name: "bar" }
 	]);
 	assertSame(components.schemas.article.properties.date.format, "date");
+	assertDeep(Object.keys(paths), [
+		"/",
+		"/admin",
+		"/blog"
+	]);
 	assertSame(paths["/"].get.summary, "front page");
+	assertSame(paths["/admin"].get.summary, "administration interface");
+	assertSame(paths["/blog"].get.summary, "list blog posts");
+	assertSame(paths["/blog"].post.summary, "create blog post");
 });

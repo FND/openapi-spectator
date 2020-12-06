@@ -18,7 +18,29 @@ export async function loadYAML(filepath) {
 	}
 }
 
+export async function* getFiles(rootDir) {
+	let entries = await fs.readdir(rootDir, { withFileTypes: true });
+	for(let entry of entries) {
+		let filepath = path.resolve(rootDir, entry.name);
+		if(entry.isDirectory()) {
+			yield* getFiles(filepath);
+		} else {
+			yield new File(filepath);
+		}
+	}
+}
+
 export function readFile(filename, baseDir) {
 	let filepath = path.resolve(baseDir, filename);
 	return fs.readFile(filepath, "utf8");
+}
+
+class File {
+	constructor(filepath) {
+		this.path = filepath;
+	}
+
+	get name() {
+		return path.basename(this.path);
+	}
 }

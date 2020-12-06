@@ -1,0 +1,3 @@
+uri: /admin
+GET:
+    summary: administration interface

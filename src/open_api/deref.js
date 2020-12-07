@@ -10,28 +10,39 @@ let OBJ_PROTO = Object.prototype;
 
 // XXX: inefficient because asynchronous operations are serialized (i.e.
 //      effectively blocking further traversal, preventing parallelization)
-export async function dereferenceAll(obj, baseDir, processor) {
+export async function dereferenceAll(obj, baseDir, transform) {
 	let ops = Object.entries(obj).map(async ([key, value]) => {
 		if(!value) {
 			return;
 		}
 		if(Array.isArray(value)) {
-			let ops = value.map(v => dereferenceAll(v, baseDir, processor));
+			let ops = value.map(v => dereferenceAll(v, baseDir, transform));
 			await Promise.all(ops);
 		}
 
 		let type = typeof value;
 		if(type === "object" && Object.getPrototypeOf(obj) === OBJ_PROTO) {
 			// plain object; recursive traversal
-			await dereferenceAll(value, baseDir, processor);
+			await dereferenceAll(value, baseDir, transform);
 		} else if(type === "string") {
 			if(value.startsWith(DIR_PREFIX)) {
 				let dirName = value.substr(DIR_PREFIX.length);
 				// eslint-disable-next-line no-var
-				obj[key] = await resolveDirectory(dirName, baseDir, processor);
+				obj[key] = await resolveDirectory(dirName, baseDir, transform);
 			} else if(value.startsWith(FILE_PREFIX)) {
 				let filename = value.substr(FILE_PREFIX.length);
-				obj[key] = await resolveFile(filename, baseDir, processor);
+				let res = await resolveFile(filename, baseDir, transform);
+				// resolve rescursively -- XXX: inelegant due to redundant type checking
+				if(Array.isArray(res)) {
+					res = res.map(v => dereferenceAll(v,
+							determineDirectory(filename, baseDir), transform));
+					res = await Promise.all(res);
+				} else if(res !== null && typeof res === "object" &&
+						Object.getPrototypeOf(obj) === OBJ_PROTO) {
+					res = await dereferenceAll(res,
+							determineDirectory(filename, baseDir), transform);
+				}
+				obj[key] = res;
 			}
 		}
 	});
@@ -40,7 +51,7 @@ export async function dereferenceAll(obj, baseDir, processor) {
 }
 
 // FIXME:: special-casing for OpenAPI `paths` should be moved into `Document`
-async function resolveDirectory(dirName, baseDir, processor) {
+async function resolveDirectory(dirName, baseDir, transform) {
 	let dir = path.resolve(baseDir, dirName);
 	let files = [];
 	let resourceByFile = new Map();
@@ -50,7 +61,7 @@ async function resolveDirectory(dirName, baseDir, processor) {
 		}
 
 		let filepath = file.path;
-		let data = loadYAML(filepath); // TODO: dereference recursively
+		let data = loadYAML(filepath);
 		resourceByFile.set(filepath, data);
 		files.push(filepath);
 	}
@@ -71,12 +82,16 @@ async function resolveDirectory(dirName, baseDir, processor) {
 	}, {});
 }
 
-async function resolveFile(filename, baseDir, processor) {
+async function resolveFile(filename, baseDir, transform) {
 	let res = readFile(filename, baseDir);
-	if(processor) {
+	if(transform) {
 		let ext = path.extname(filename).substr(1) || null;
-		res = processor(await res, ext);
-		// TODO: dereference recursively
+		res = transform(await res, ext);
 	}
 	return res;
+}
+
+function determineDirectory(filename, baseDir) {
+	let filepath = path.resolve(baseDir, filename);
+	return path.dirname(filepath);
 }

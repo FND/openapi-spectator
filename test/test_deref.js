@@ -112,12 +112,7 @@ test("post-processing", async () => {
 	};
 	let res = await dereferenceAll(obj, FIXTURES_DIR, async (txt, ext) => {
 		await wait(10);
-		switch(ext) {
-		case "yaml":
-			return yaml.safeLoad(txt);
-		default:
-			return txt;
-		}
+		return transform(txt, ext);
 	});
 	assertDeep(res, {
 		tags: [{
@@ -141,4 +136,44 @@ test("post-processing", async () => {
 			}
 		}
 	});
+
+	obj = {
+		foo: "hello world",
+		bar: "@alt/index.yaml"
+	};
+	res = await dereferenceAll(obj, FIXTURES_DIR, transform);
+	assertDeep(res, {
+		foo: "hello world",
+		bar: {
+			title: "sample",
+			meta: {
+				author: "jdoe",
+				version: 3
+			},
+			items: [{
+				id: "abc123",
+				details: {
+					valid: true
+				}
+			}, {
+				id: "def456",
+				details: {
+					valid: false,
+					errors: [{
+						code: "ENOREF",
+						message: "invalid reference\n"
+					}]
+				}
+			}]
+		}
+	});
 });
+
+function transform(txt, ext) {
+	switch(ext) {
+	case "yaml":
+		return yaml.safeLoad(txt);
+	default:
+		return txt;
+	}
+}

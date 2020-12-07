@@ -1,7 +1,7 @@
 /* global suite, test */
 import { dereferenceAll } from "../src/open_api/deref.js";
 import { readFile } from "../src/util.js";
-import { FIXTURES_DIR, assertSame, assertDeep } from "./util.js";
+import { FIXTURES_DIR, wait, assertSame, assertDeep } from "./util.js";
 import yaml from "js-yaml";
 
 suite("resolving file references");
@@ -110,7 +110,8 @@ test("post-processing", async () => {
 			schemas: "@schemas.yaml"
 		}
 	};
-	let res = await dereferenceAll(obj, FIXTURES_DIR, (txt, ext) => {
+	let res = await dereferenceAll(obj, FIXTURES_DIR, async (txt, ext) => {
+		await wait(10);
 		switch(ext) {
 		case "yaml":
 			return yaml.safeLoad(txt);

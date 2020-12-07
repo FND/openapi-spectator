@@ -9,9 +9,9 @@ export default class Document {
 	constructor(rootDir) {
 		this.rootDir = rootDir;
 
-		let index = path.resolve(rootDir, INDEX_FILE);
-		let data = processYAML(index, rootDir);
-		this.data = data.then(data => { // XXX: awkward due to async and naming
+		let filepath = path.resolve(rootDir, INDEX_FILE);
+		// XXX: awkward due to async and naming
+		this.data = processYAML(filepath, rootDir).then(data => {
 			data.paths = resources2paths(data.paths);
 			return data;
 		});
@@ -53,15 +53,18 @@ function resources2paths(resources) {
 	}, {});
 }
 
-// loads YAML and processes it to allow for externalization
 async function processYAML(filepath, rootDir) {
 	let data = await loadYAML(filepath);
-	if(Array.isArray(data)) {
-		return data;
-	}
+	return dereferenceAll(data, rootDir, transform);
+}
 
-	await dereferenceAll(data, rootDir, txt => yaml.safeLoad(txt));
-	return data;
+function transform(txt, ext) {
+	switch(ext) {
+	case "yaml":
+		return yaml.safeLoad(txt);
+	default:
+		return txt;
+	}
 }
 
 function serializeParams(params, type, defaults = {}) {

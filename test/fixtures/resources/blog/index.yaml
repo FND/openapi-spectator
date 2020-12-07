@@ -1,12 +1,4 @@
 uri: /blog
-GET:
-    summary: list blog posts
-    queryParameters:
-        tag:
-            description: one or more tags to filter by
-            schema:
-                type: array
-                items:
-                    type: string
+GET: "@get.yaml"
 POST:
     summary: create blog post

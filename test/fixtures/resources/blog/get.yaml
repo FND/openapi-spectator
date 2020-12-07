@@ -1,0 +1,9 @@
+summary: list blog posts
+description: "@docs.md"
+queryParameters:
+    tag:
+        description: one or more tags to filter by
+        schema:
+            type: array
+            items:
+                type: string

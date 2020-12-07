@@ -45,7 +45,7 @@ test("directory dereferencing", async () => {
 	let obj = {
 		paths: "@@resources"
 	};
-	let res = await dereferenceAll(obj, FIXTURES_DIR);
+	let res = await dereferenceAll(obj, FIXTURES_DIR, transform);
 	assertDeep(Object.keys(res.paths), [
 		"/",
 		"/admin",

@@ -54,20 +54,15 @@ export async function dereferenceAll(obj, baseDir, transform) {
 async function resolveDirectory(dirName, baseDir, transform) {
 	let dir = path.resolve(baseDir, dirName);
 	let files = [];
-	let resourceByFile = new Map();
 	for await (let file of getFiles(dir)) {
-		if(file.name !== INDEX_FILE) {
-			continue;
+		if(file.name === INDEX_FILE) {
+			files.push(file.path);
 		}
-
-		let filepath = file.path;
-		let data = loadYAML(filepath);
-		resourceByFile.set(filepath, data);
-		files.push(filepath);
 	}
 	let resources = sortPaths(files, path.sep).
 		map(async filepath => {
-			let data = await resourceByFile.get(filepath);
+			let data = await loadYAML(filepath);
+			data = await dereferenceAll(data, path.dirname(filepath), transform);
 			return { filepath, data };
 		});
 	resources = await Promise.all(resources);

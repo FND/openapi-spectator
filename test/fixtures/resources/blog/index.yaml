@@ -1,4 +1,4 @@
 uri: /blog
-GET: "@get.yaml"
+GET: <@get.yaml
 POST:
     summary: create blog post

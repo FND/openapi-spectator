@@ -29,7 +29,7 @@ test("file dereferencing", async () => {
 
 	obj = {
 		foo: "hello world",
-		bar: "@lipsum.txt",
+		bar: "<@lipsum.txt",
 		baz: "…"
 	};
 	res = await dereferenceAll(obj, FIXTURES_DIR);
@@ -43,7 +43,7 @@ test("file dereferencing", async () => {
 
 test("directory dereferencing", async () => {
 	let obj = {
-		paths: "@@resources"
+		paths: "<@@resources"
 	};
 	let res = await dereferenceAll(obj, FIXTURES_DIR, transform);
 	assertDeep(Object.keys(res.paths), [
@@ -61,18 +61,18 @@ test("directory dereferencing", async () => {
 
 test("nested dereferencing", async () => {
 	let obj = {
-		foo: "@lipsum.txt",
+		foo: "<@lipsum.txt",
 		bar: {
 			baz: {
 				title: "…",
-				content: "@empty.txt"
+				content: "<@empty.txt"
 			},
 			links: [{
 				self: {
-					uri: "@dummy.txt"
+					uri: "<@dummy.txt"
 				},
 				canonical: {
-					uri: "@dummy.txt"
+					uri: "<@dummy.txt"
 				}
 			}]
 		}
@@ -102,12 +102,12 @@ test("post-processing", async () => {
 	let obj = {
 		tags: [{
 			name: "foo",
-			description: "@lipsum.md"
+			description: "<@lipsum.md"
 		}, {
 			name: "bar"
 		}],
 		components: {
-			schemas: "@schemas.yaml"
+			schemas: "<@schemas.yaml"
 		}
 	};
 	let res = await dereferenceAll(obj, FIXTURES_DIR, async (txt, ext) => {
@@ -139,7 +139,7 @@ test("post-processing", async () => {
 
 	obj = {
 		foo: "hello world",
-		bar: "@alt/index.yaml"
+		bar: "<@alt/index.yaml"
 	};
 	res = await dereferenceAll(obj, FIXTURES_DIR, transform);
 	assertDeep(res, {

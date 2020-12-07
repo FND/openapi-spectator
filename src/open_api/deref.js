@@ -4,8 +4,8 @@ import sortPaths from "path-sort";
 import path from "path";
 
 // XXX: prefixes are simplistic and thus prone to false positive
-let FILE_PREFIX = "@";
-let DIR_PREFIX = "@@";
+let FILE_PREFIX = "<@";
+let DIR_PREFIX = "<@@";
 let OBJ_PROTO = Object.prototype;
 
 // XXX: inefficient because asynchronous operations are serialized (i.e.

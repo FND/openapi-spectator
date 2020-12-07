@@ -3,9 +3,9 @@ info:
     title: My Service
     version: 0.0.0
 
-tags: "@tags.yaml"
+tags: <@tags.yaml
 
 components:
-    schemas: "@schemas.yaml"
+    schemas: <@schemas.yaml
 
-paths: "@@resources"
+paths: <@@resources

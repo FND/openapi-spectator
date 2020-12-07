@@ -1,5 +1,5 @@
 summary: list blog posts
-description: "@docs.md"
+description: <@docs.md
 queryParameters:
     tag:
         description: one or more tags to filter by

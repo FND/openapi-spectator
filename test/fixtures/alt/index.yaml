@@ -1,3 +1,3 @@
 title: sample
-meta: "@meta.yaml"
-items: "@items.yaml"
+meta: <@meta.yaml
+items: <@items.yaml

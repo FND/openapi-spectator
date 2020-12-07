@@ -2,4 +2,4 @@
   details:
       valid: true
 - id: def456
-  details: "@item.yaml"
+  details: <@item.yaml

@@ -26,6 +26,17 @@ test("document", async () => {
 	assertSame(paths["/"].get.summary, "front page");
 	assertSame(paths["/admin"].get.summary, "administration interface");
 	assertSame(paths["/blog"].get.summary, "list blog posts");
+	assertDeep(paths["/blog"].get.parameters, [{
+		name: "tag",
+		description: "one or more tags to filter by",
+		in: "query",
+		schema: {
+			type: "array",
+			items: {
+				type: "string"
+			}
+		}
+	}]);
 	assertSame(paths["/blog"].post.summary, "create blog post");
 	assertSame(paths["/blog/{slug}"].get.summary, "show blog post");
 	assertDeep(paths["/blog/{slug}"].get.parameters, [{
@@ -33,6 +44,13 @@ test("document", async () => {
 		description: "article identifier",
 		in: "path",
 		required: true,
+		schema: {
+			type: "string"
+		}
+	}, {
+		name: "referrer",
+		description: "originating URL or service",
+		in: "query",
 		schema: {
 			type: "string"
 		}

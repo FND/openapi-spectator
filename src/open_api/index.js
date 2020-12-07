@@ -25,7 +25,13 @@ function resources2paths(resources) {
 			if(key === "pathParameters") {
 				params = descriptor;
 			} else if(key === key.toUpperCase()) { // HTTP method
-				res[key.toLowerCase()] = descriptor;
+				let { queryParameters: params, ...desc } = descriptor;
+				res[key.toLowerCase()] = {
+					...desc,
+					...(params && {
+						parameters: serializeParams(params, "query")
+					})
+				};
 			} else {
 				throw new Error(`invalid resource property: \`${key}\``);
 			}

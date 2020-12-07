@@ -7,3 +7,8 @@ pathParameters:
 
 GET:
     summary: show blog post
+    queryParameters:
+        referrer:
+            description: originating URL or service
+            schema:
+                type: string

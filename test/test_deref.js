@@ -41,6 +41,22 @@ test("file dereferencing", async () => {
 	});
 });
 
+test("globbing", async () => {
+	let obj = {
+		data: "<@alt/{meta,item}.yaml"
+	};
+	let res = await dereferenceAll(obj, FIXTURES_DIR, transform);
+	assertDeep(res.data, {
+		version: 3,
+		author: "jdoe",
+		valid: false,
+		errors: [{
+			code: "ENOREF",
+			message: "invalid reference\n"
+		}]
+	});
+});
+
 test("directory dereferencing", async () => {
 	let obj = {
 		paths: "<@@resources"

@@ -1,5 +1,6 @@
 import { INDEX_FILE } from "./index.js"; // XXX: awkward
 import { getFiles, loadYAML, readFile } from "../util.js";
+import glob from "fast-glob";
 import sortPaths from "path-sort";
 import path from "path";
 
@@ -31,6 +32,21 @@ export async function dereferenceAll(obj, baseDir, transform) {
 				obj[key] = await resolveDirectory(dirName, baseDir, transform);
 			} else if(value.startsWith(FILE_PREFIX)) {
 				let filename = value.substr(FILE_PREFIX.length);
+				if(glob.isDynamicPattern(filename)) {
+					// FIXME: inelegant due to redundanies; requires consolidation
+					let files = await glob(filename, {
+						cwd: baseDir
+					});
+					files = files.map(async filename => {
+						let res = await resolveFile(filename, baseDir, transform);
+						return dereferenceAll(res,
+								determineDirectory(filename, baseDir), transform);
+					});
+					let data = await Promise.all(files);
+					obj[key] = Object.assign(...data); // FIXME: assumes object res;
+					return;
+				}
+
 				let res = await resolveFile(filename, baseDir, transform);
 				// resolve rescursively -- XXX: inelegant due to redundant type checking
 				if(Array.isArray(res)) {

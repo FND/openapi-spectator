@@ -10,6 +10,7 @@
 		"lint": "eslint --cache src test && echo ✓"
 	},
 	"dependencies": {
+		"fast-glob": "^3.2.4",
 		"js-yaml": "^3.14.0",
 		"path-sort": "^0.1.0"
 	},

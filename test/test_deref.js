@@ -62,17 +62,23 @@ test("directory dereferencing", async () => {
 		paths: "<@@resources"
 	};
 	let res = await dereferenceAll(obj, FIXTURES_DIR, transform);
-	assertDeep(Object.keys(res.paths), [
+	let byURI = res.paths.reduce((memo, { filepath, data }) => {
+		let { uri, ...descriptor } = data;
+		memo.set(data.uri, descriptor);
+		return memo;
+	}, new Map());
+
+	assertDeep([...byURI.keys()], [
 		"/",
 		"/admin",
 		"/blog",
 		"/blog/{slug}"
 	]);
-	assertSame(res.paths["/"].GET.summary, "front page");
-	assertSame(res.paths["/admin"].GET.summary, "administration interface");
-	assertSame(res.paths["/blog"].GET.summary, "list blog posts");
-	assertSame(res.paths["/blog"].POST.summary, "create blog post");
-	assertSame(res.paths["/blog/{slug}"].GET.summary, "show blog post");
+	assertSame(byURI.get("/").GET.summary, "front page");
+	assertSame(byURI.get("/admin").GET.summary, "administration interface");
+	assertSame(byURI.get("/blog").GET.summary, "list blog posts");
+	assertSame(byURI.get("/blog").POST.summary, "create blog post");
+	assertSame(byURI.get("/blog/{slug}").GET.summary, "show blog post");
 });
 
 test("nested dereferencing", async () => {

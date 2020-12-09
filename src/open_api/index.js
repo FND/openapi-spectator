@@ -1,9 +1,7 @@
-import { dereferenceAll } from "./deref.js";
+import { INDEX_FILE, dereferenceAll } from "./deref.js";
 import { loadYAML } from "../util.js";
 import yaml from "js-yaml";
 import path from "path";
-
-export let INDEX_FILE = "index.yaml";
 
 export default class Document {
 	constructor(rootDir) {
@@ -19,38 +17,49 @@ export default class Document {
 }
 
 function resources2paths(resources) {
-	return Object.entries(resources).reduce((memo, [uri, resource]) => {
-		let params;
-		resource = Object.entries(resource).reduce((res, [key, descriptor]) => {
-			if(key === "pathParameters") {
-				params = descriptor;
-			} else if(key === key.toUpperCase()) { // HTTP method
-				let { queryParameters: params, ...desc } = descriptor;
-				res[key.toLowerCase()] = {
-					...desc,
-					...(params && {
-						parameters: serializeParams(params, "query")
-					})
-				};
-			} else {
-				throw new Error(`invalid resource property: \`${key}\``);
-			}
-			return res;
-		}, {});
-
-		// inject path parameters
-		if(params) {
-			params = serializeParams(params, "path", {
-				required: true
-			});
-			Object.entries(resource).forEach(([method, descriptor]) => {
-				descriptor.parameters = params.concat(descriptor.parameters || []);
-			});
+	return resources.reduce((memo, { filepath, data }) => {
+		let { uri, descriptor } = resource2path(data);
+		if(memo[uri]) {
+			throw new Error(`duplicate resource URI: \`${uri}\` in \`${filepath}\``);
 		}
-
-		memo[uri] = resource;
+		memo[uri] = descriptor;
 		return memo;
 	}, {});
+}
+
+function resource2path({ uri, ...resource }) {
+	let params;
+	resource = Object.entries(resource).reduce((memo, [key, descriptor]) => {
+		if(key === "pathParameters") {
+			params = descriptor;
+		} else if(key === key.toUpperCase()) { // HTTP method
+			let { queryParameters: params, ...desc } = descriptor;
+			memo[key.toLowerCase()] = {
+				...desc,
+				...(params && {
+					parameters: serializeParams(params, "query")
+				})
+			};
+		} else {
+			throw new Error(`invalid resource property: \`${key}\``);
+		}
+		return memo;
+	}, {});
+
+	// inject path parameters
+	if(params) {
+		params = serializeParams(params, "path", {
+			required: true
+		});
+		Object.entries(resource).forEach(([method, descriptor]) => {
+			descriptor.parameters = params.concat(descriptor.parameters || []);
+		});
+	}
+
+	return {
+		uri,
+		descriptor: resource
+	};
 }
 
 async function processYAML(filepath, rootDir) {

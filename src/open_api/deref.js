@@ -1,96 +1,86 @@
-import { INDEX_FILE } from "./index.js"; // XXX: awkward
-import { getFiles, loadYAML, readFile } from "../util.js";
+import { loadYAML, getFiles, readFile } from "../util.js";
 import glob from "fast-glob";
 import sortPaths from "path-sort";
 import path from "path";
 
-// XXX: prefixes are simplistic and thus prone to false positive
+let { isArray } = Array;
+
+export let INDEX_FILE = "index.yaml"; // XXX: hard-coded
 let FILE_PREFIX = "<@";
 let DIR_PREFIX = "<@@";
 let OBJ_PROTO = Object.prototype;
 
-// XXX: inefficient because asynchronous operations are serialized (i.e.
-//      effectively blocking further traversal, preventing parallelization)
-export async function dereferenceAll(obj, baseDir, transform) {
-	let ops = Object.entries(obj).map(async ([key, value]) => {
-		if(!value) {
-			return;
-		}
-		if(Array.isArray(value)) {
-			let ops = value.map(v => dereferenceAll(v, baseDir, transform));
-			await Promise.all(ops);
-		}
+// `context` consists of `baseDir` and `transform`
+// `transform` is an optional function `(content, fileExtension)`
+export async function dereferenceAll(value, ...context) {
+	return value ? resolveAny(value, ...context) : value;
+}
 
-		let type = typeof value;
-		if(type === "object" && Object.getPrototypeOf(obj) === OBJ_PROTO) {
-			// plain object; recursive traversal
-			await dereferenceAll(value, baseDir, transform);
-		} else if(type === "string") {
-			if(value.startsWith(DIR_PREFIX)) {
-				let dirName = value.substr(DIR_PREFIX.length);
-				// eslint-disable-next-line no-var
-				obj[key] = await resolveDirectory(dirName, baseDir, transform);
-			} else if(value.startsWith(FILE_PREFIX)) {
-				let filename = value.substr(FILE_PREFIX.length);
-				if(glob.isDynamicPattern(filename)) {
-					// FIXME: inelegant due to redundanies; requires consolidation
-					let files = await glob(filename, {
-						cwd: baseDir
-					});
-					files = files.map(async filename => {
-						let res = await resolveFile(filename, baseDir, transform);
-						return dereferenceAll(res,
-								determineDirectory(filename, baseDir), transform);
-					});
-					let data = await Promise.all(files);
-					obj[key] = Object.assign(...data); // FIXME: assumes object res;
-					return;
-				}
+async function resolveAny(value, ...context) {
+	if(isArray(value)) {
+		let res = value.map(v => dereferenceAll(v, ...context));
+		return Promise.all(res);
+	}
 
-				let res = await resolveFile(filename, baseDir, transform);
-				// resolve rescursively -- XXX: inelegant due to redundant type checking
-				if(Array.isArray(res)) {
-					res = res.map(v => dereferenceAll(v,
-							determineDirectory(filename, baseDir), transform));
-					res = await Promise.all(res);
-				} else if(res !== null && typeof res === "object" &&
-						Object.getPrototypeOf(obj) === OBJ_PROTO) {
-					res = await dereferenceAll(res,
-							determineDirectory(filename, baseDir), transform);
-				}
-				obj[key] = res;
-			}
-		}
+	let plainObject = typeof value === "object" &&
+			Object.getPrototypeOf(value) === OBJ_PROTO;
+	return plainObject ? resolveObject(value, ...context) : value;
+}
+
+async function resolveObject(obj, ...context) {
+	let res = Object.entries(obj).map(async ([key, value]) => {
+		let resolve = typeof value === "string" ? resolveString : resolveAny;
+		obj[key] = await resolve(value, ...context); // XXX: avoid mutation
 	});
-	await Promise.all(ops);
+	await Promise.all(res);
 	return obj;
 }
 
-// FIXME:: special-casing for OpenAPI `paths` should be moved into `Document`
-async function resolveDirectory(dirName, baseDir, transform) {
-	let dir = path.resolve(baseDir, dirName);
+async function resolveString(value, ...context) {
+	if(value.startsWith(DIR_PREFIX)) {
+		let name = value.substr(DIR_PREFIX.length);
+		return resolveDirectory(name, ...context);
+	}
+	if(value.startsWith(FILE_PREFIX)) {
+		let filename = value.substr(FILE_PREFIX.length);
+		if(glob.isDynamicPattern(filename)) {
+			return resolveGlob(filename, ...context);
+		}
+		return resolveFile(filename, ...context);
+	}
+	return value;
+}
+
+// NB: not generic; assumes YAML entry points
+async function resolveDirectory(name, baseDir, transform) {
+	let dir = path.resolve(baseDir, name);
 	let files = [];
 	for await (let file of getFiles(dir)) {
 		if(file.name === INDEX_FILE) {
 			files.push(file.path);
 		}
 	}
-	let resources = sortPaths(files, path.sep).
-		map(async filepath => {
-			let data = await loadYAML(filepath);
-			data = await dereferenceAll(data, path.dirname(filepath), transform);
-			return { filepath, data };
-		});
-	resources = await Promise.all(resources);
 
-	return resources.reduce((memo, { filepath, data }) => {
-		let { uri, ...descriptor } = data;
-		if(memo[uri]) {
-			throw new Error(`duplicate resource URI: \`${uri}\` in \`${filepath}\``);
-		}
-		memo[uri] = descriptor;
-		return memo;
-	}, {});
+	let entries = sortPaths(files, path.sep).map(async filepath => {
+		let data = await loadYAML(filepath);
+		let dir = path.dirname(filepath);
+		data = await dereferenceAll(data, dir, transform);
+		return { filepath, data };
+	});
+	return Promise.all(entries);
+}
+
+async function resolveGlob(pattern, ...context) {
+	let [baseDir] = context;
+	let files = glob.stream(pattern, { cwd: baseDir });
+
+	let res = [];
+	for await (let filename of files) {
+		let data = resolveFile(filename, ...context);
+		res.push(data);
+	}
+	let data = await Promise.all(res);
+	return Object.assign(...data); // FIXME: assumes object
 }
 
 async function resolveFile(filename, baseDir, transform) {
@@ -98,11 +88,10 @@ async function resolveFile(filename, baseDir, transform) {
 	if(transform) {
 		let ext = path.extname(filename).substr(1) || null;
 		res = transform(await res, ext);
+
+		let dir = path.dirname(filename);
+		dir = path.resolve(baseDir, dir);
+		res = await dereferenceAll(res, dir, transform);
 	}
 	return res;
-}
-
-function determineDirectory(filename, baseDir) {
-	let filepath = path.resolve(baseDir, filename);
-	return path.dirname(filepath);
 }

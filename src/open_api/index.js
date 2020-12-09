@@ -71,6 +71,8 @@ function transform(txt, ext) {
 	switch(ext) {
 	case "yaml":
 		return yaml.safeLoad(txt);
+	case "json":
+		return JSON.parse(txt);
 	default:
 		return txt;
 	}

@@ -12,6 +12,7 @@
 	"dependencies": {
 		"fast-glob": "^3.2.4",
 		"js-yaml": "^3.14.0",
+		"lampenfieber": "^1.1.0",
 		"path-sort": "^0.1.0"
 	},
 	"devDependencies": {

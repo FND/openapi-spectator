@@ -1,4 +1,5 @@
 import { INDEX_FILE, dereferenceAll } from "./deref.js";
+import { resolveBlocks } from "../text.js";
 import { loadYAML } from "../util.js";
 import yaml from "js-yaml";
 import path from "path";
@@ -67,12 +68,14 @@ async function processYAML(filepath, rootDir) {
 	return dereferenceAll(data, rootDir, transform);
 }
 
-function transform(txt, ext) {
+function transform(txt, ext, baseDir) {
 	switch(ext) {
 	case "yaml":
 		return yaml.safeLoad(txt);
 	case "json":
 		return JSON.parse(txt);
+	case "md":
+		return resolveBlocks(txt, baseDir);
 	default:
 		return txt;
 	}

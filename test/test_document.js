@@ -26,6 +26,20 @@ test("document", async () => {
 	assertSame(paths["/"].get.summary, "front page");
 	assertSame(paths["/admin"].get.summary, "administration interface");
 	assertSame(paths["/blog"].get.summary, "list blog posts");
+	assertSame(paths["/blog"].get.description, `
+lorem ipsum
+
+<pre><code class="language-json">{
+    "title": "hello world",
+    "date": "1970-12-31"
+}</code></pre>
+
+dolor sit amet
+
+<pre><code>GOTO 10</code></pre>
+
+<pre><code class="language-shell">echo "hello world"</code></pre>
+	`.trim() + "\n");
 	assertDeep(paths["/blog"].get.parameters, [{
 		name: "tag",
 		description: "one or more tags to filter by",

@@ -86,11 +86,12 @@ async function resolveGlob(pattern, ...context) {
 async function resolveFile(filename, baseDir, transform) {
 	let res = readFile(filename, baseDir);
 	if(transform) {
-		let ext = path.extname(filename).substr(1) || null;
-		res = transform(await res, ext, baseDir);
-
 		let dir = path.dirname(filename);
 		dir = path.resolve(baseDir, dir);
+
+		let ext = path.extname(filename).substr(1) || null;
+		res = transform(await res, ext, dir);
+
 		res = await dereferenceAll(res, dir, transform);
 	}
 	return res;

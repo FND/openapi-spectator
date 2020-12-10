@@ -1,5 +1,6 @@
 /* global suite, test */
-import Document from "../src/open_api/index.js";
+import Document, { _transform } from "../src/open_api/index.js";
+import { dereferenceAll } from "../src/open_api/deref.js";
 import { FIXTURES_DIR, assertSame, assertDeep } from "./util.js";
 
 suite("OpenAPI");
@@ -69,4 +70,28 @@ dolor sit amet
 			type: "string"
 		}
 	}]);
+});
+
+test("content transformation", async () => {
+	let obj = {
+		foo: "<@alt/lipsum.md"
+	};
+	let res = await dereferenceAll(obj, FIXTURES_DIR, _transform);
+	assertDeep(res, {
+		foo: `
+lorem ipsum
+
+<pre><code class="language-json">{
+    "title": "hello world",
+    "date": "1970-01-01"
+}</code></pre>
+
+dolor sit amet
+
+<pre><code class="language-json">{
+    "title": "hello world",
+    "date": "1970-12-31"
+}</code></pre>
+		`.trim() + "\n"
+	});
 });

@@ -65,10 +65,10 @@ function resource2path({ uri, ...resource }) {
 
 async function processYAML(filepath, rootDir) {
 	let data = await loadYAML(filepath);
-	return dereferenceAll(data, rootDir, transform);
+	return dereferenceAll(data, rootDir, _transform);
 }
 
-function transform(txt, ext, baseDir) {
+export function _transform(txt, ext, baseDir) {
 	switch(ext) {
 	case "yaml":
 		return yaml.safeLoad(txt);

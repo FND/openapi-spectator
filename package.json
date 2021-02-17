@@ -10,13 +10,13 @@
 		"lint": "eslint --cache src test && echo ✓"
 	},
 	"dependencies": {
-		"fast-glob": "^3.2.4",
-		"js-yaml": "^3.14.0",
+		"fast-glob": "^3.2.5",
+		"js-yaml": "^4.0.0",
 		"lampenfieber": "^1.1.0",
 		"path-sort": "^0.1.0"
 	},
 	"devDependencies": {
-		"eslint-config-fnd": "^1.9.0",
-		"mocha": "^8.2.1"
+		"eslint-config-fnd": "^1.10.0",
+		"mocha": "^8.3.0"
 	}
 }

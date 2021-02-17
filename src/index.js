@@ -7,7 +7,7 @@ main(...process.argv.slice(2));
 
 async function main(rootDir, configPath) {
 	let doc = new Document(rootDir);
-	let res = yaml.safeDump(await doc.data, {
+	let res = yaml.dump(await doc.data, {
 		// TODO: configurable
 		indent: 4,
 		noArrayIndent: true

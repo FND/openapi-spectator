@@ -71,7 +71,7 @@ async function processYAML(filepath, rootDir) {
 export function _transform(txt, ext, baseDir) {
 	switch(ext) {
 	case "yaml":
-		return yaml.safeLoad(txt);
+		return yaml.load(txt);
 	case "json":
 		return JSON.parse(txt);
 	case "md":

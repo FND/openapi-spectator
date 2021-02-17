@@ -194,7 +194,7 @@ test("post-processing", async () => {
 function transform(txt, ext) {
 	switch(ext) {
 	case "yaml":
-		return yaml.safeLoad(txt);
+		return yaml.load(txt);
 	default:
 		return txt;
 	}

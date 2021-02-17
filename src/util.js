@@ -4,7 +4,7 @@ import path from "path";
 
 export async function loadYAML(filepath) {
 	let data = await readFile(filepath);
-	return yaml.safeLoad(data);
+	return yaml.load(data);
 }
 
 export async function* getFiles(rootDir) {

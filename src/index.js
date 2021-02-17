@@ -1,20 +1,17 @@
-#!/usr/bin/env node
 import Document from "./open_api/index.js";
 import { substitute } from "./substitution.js";
 import yaml from "js-yaml";
 
-main(...process.argv.slice(2));
-
-async function main(rootDir, configPath) {
+export default async function generate(rootDir, configPath, options = {}) {
 	let doc = new Document(rootDir);
-	let res = yaml.dump(await doc.data, {
-		// TODO: configurable
+	let txt = yaml.dump(await doc.data, {
 		indent: 4,
-		noArrayIndent: true
+		noArrayIndent: true,
+		...options
 	}).trim();
 
 	if(configPath) {
-		res = await substitute(res, configPath);
+		txt = await substitute(txt, configPath);
 	}
-	console.log(res); // eslint-disable-line no-console
+	return txt;
 }

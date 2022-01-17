@@ -25,7 +25,7 @@ export async function readFile(filepath, baseDir) {
 	}
 
 	try {
-		return fs.readFile(filepath, "utf8");
+		return await fs.readFile(filepath, "utf8");
 	} catch(err) {
 		switch(err.code) {
 		case "ENOENT":
